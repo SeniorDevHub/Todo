@@ -5,10 +5,9 @@ export default class Interactive {
       const toDoLists = display.getToDoListFromStorage();
       toDoLists[id].completed = statusCheck;
       display.addListToStorage(toDoLists);
-      display.showLists();
+      display.showLists(document.getElementById('filterTasks').value);
     }
 
-    // checkbox status
     static checkStatusEvent = () => (
       document.querySelectorAll('.checkbox').forEach((checkbox) => checkbox.addEventListener('change', () => {
         let statusCheck;
@@ -19,22 +18,16 @@ export default class Interactive {
           id = 0;
         }
 
-        if (checkbox.checked === true) {
-          statusCheck = true;
-        } else if (checkbox.checked !== true) {
-          statusCheck = false;
-        }
-
+        statusCheck = checkbox.checked;
         this.changeCompletedListCheck(statusCheck, id);
       }))
     )
 
     static clearCompletedToDoLists = () => {
       let toDoLists = display.getToDoListFromStorage();
-
-      toDoLists = toDoLists.filter((item) => item.completed !== true);
+      toDoLists = toDoLists.filter((item) => !item.completed);
       display.newIndexNum(toDoLists);
       display.addListToStorage(toDoLists);
-      display.showLists();
+      display.showLists(document.getElementById('filterTasks').value);
     }
 }
