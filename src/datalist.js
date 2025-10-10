@@ -1,5 +1,3 @@
-// data list
-
 export default class DataList {
   constructor(description, completed, index) {
     this.description = description;

@@ -6,34 +6,46 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <title>Awesome To Do List</title>
 </head>
-
-<!-- body starts here -->
-
 <body>
-
-<!-- To do list starts here -->
-
     <div id="toDoList">
         <div class="title">
             <h1 class="ttdl">Today's To Do List</h1>
-            <i class="fa fa-arrows-rotate icon"></i>
+            <div class="controls">
+                <select id="filterTasks">
+                    <option value="all">All</option>
+                    <option value="achieved">Achieved</option>
+                    <option value="todo">Todo</option>
+                </select>
+                <button id="themeToggle" title="Toggle Theme">
+                    <i class="fas fa-adjust icon"></i>
+                </button>
+                <i class="fa fa-arrows-rotate icon refresh" title="Refresh"></i>
+            </div>
         </div>
         <form id="inputList" action="#" method="post">
-        <div class="inputTask">
-        <input id="addList" type="text" placeholder="Add to your to do list..." maxlength="80" required>
-        <button class="submiticon" type="submit"> <i class="fa fa-arrow-turn-down icon"></i> </button>
-        </div>
+            <div class="inputTask">
+                <input id="addList" type="text" placeholder="Add to your to do list..." maxlength="80" required>
+                <button class="submiticon" type="submit">
+                    <i class="fa fa-arrow-turn-down icon"></i>
+                </button>
+            </div>
         </form>
-        <div class="toDoListContainer"></div>
-<!-- button clear starts here -->
-        <button id="btnClear" type="submit">Clear Completed Tasks</button>
+        <div class="toDoListContainer">
+            <!-- Tasks will be dynamically added here -->
+            <div class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <p>No tasks yet. Add a task to get started!</p>
+            </div>
+        </div>
+        <div class="stats">
+            <span class="total-tasks">Total: 0</span>
+            <span class="completed-tasks">Completed: 0</span>
+        </div>
+        <button id="btnClear" type="button">
+            <i class="fas fa-broom"></i>
+            Clear Completed Tasks
+        </button>
     </div>
-
-<!-- To do list ends here -->
-
     <script src="../dist/main.js"></script>
-
-<!-- body ends here -->
-
 </body>
 </html>
