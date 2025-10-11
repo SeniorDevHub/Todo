@@ -5,6 +5,8 @@ import DataList from './datalist.js';
 // get listed inputs from local storage
 
 export default class display {
+  static currentFilter = 'all';
+
   static getToDoListFromStorage = () => {
     let toDoLists;
 
@@ -68,6 +70,37 @@ export default class display {
       }));
     };
 
+    // Filter tasks based on current filter
+    static getFilteredTasks = () => {
+      const allTasks = this.getToDoListFromStorage();
+      switch (this.currentFilter) {
+        case 'todo':
+          return allTasks.filter(task => !task.completed);
+        case 'achieved':
+          return allTasks.filter(task => task.completed);
+        case 'all':
+        default:
+          return allTasks;
+      }
+    };
+
+    // Set filter and update display
+    static setFilter = (filter) => {
+      this.currentFilter = filter;
+      this.showLists();
+      this.updateFilterButtons();
+    };
+
+    // Update filter button states
+    static updateFilterButtons = () => {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.filter === this.currentFilter) {
+          btn.classList.add('active');
+        }
+      });
+    };
+
     // section created dynamiclly
     static toDoListsHtml = ({ description, index }, statusCheck, statusCompleted) => {
       const ul = document.createElement('ul');
@@ -85,7 +118,7 @@ export default class display {
 
     // show listed tasks
     static showLists = () => {
-      const toDoLists = this.getToDoListFromStorage();
+      const toDoLists = this.getFilteredTasks();
       document.querySelector('.toDoListContainer').innerHTML = '';
       toDoLists.forEach((item) => {
         let statusCheck;
@@ -138,6 +171,22 @@ export default class display {
           this.ListInputUpdate(document.getElementById(listID).value, (Number(listID.replace('LIST', '')) - 1));
         }
       }));
+
+      // Add blur event to save on focus loss
+      document.querySelectorAll('.text').forEach((input) => input.addEventListener('blur', (event) => {
+        const inputListId = 'LIST';
+        const ListIdSelected = event.currentTarget.id;
+        let listID;
+
+        if (!ListIdSelected.includes('LIST')) {
+          listID = inputListId.concat(ListIdSelected);
+        } else {
+          listID = ListIdSelected;
+        }
+
+        document.getElementById(listID).setAttribute('readonly', 'readonly');
+        this.ListInputUpdate(document.getElementById(listID).value, (Number(listID.replace('LIST', '')) - 1));
+      }));
     }
 
     // edit list
@@ -163,12 +212,12 @@ export default class display {
         previousList = listItem;
         const ulItem = event.target.closest('ul');
 
-        listItem.style.background = 'rgb(230, 230, 184)';
-        ulItem.style.background = 'rgb(230, 230, 184)';
+        listItem.style.background = 'var(--hover-bg)';
+        ulItem.style.background = 'var(--hover-bg)';
 
         document.getElementById(listID).removeAttribute('readonly');
         document.getElementById(listID).focus();
-        document.getElementById(listID).style.background = 'rgb(230, 230, 184)';
+        document.getElementById(listID).style.background = 'var(--hover-bg)';
         listItem.querySelector('.edit_list_btn').style.display = 'none';
         listItem.querySelector('.remove_btn').style.display = 'block';
       }));

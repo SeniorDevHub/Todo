@@ -16,7 +16,12 @@
     <div id="toDoList">
         <div class="title">
             <h1 class="ttdl">Today's To Do List</h1>
-            <i class="fa fa-arrows-rotate icon"></i>
+            <div class="title-controls">
+                <button id="theme-toggle" class="theme-toggle">
+                    <i class="fa fa-moon icon"></i>
+                </button>
+                <i class="fa fa-arrows-rotate icon"></i>
+            </div>
         </div>
         <form id="inputList" action="#" method="post">
         <div class="inputTask">
@@ -24,6 +29,11 @@
         <button class="submiticon" type="submit"> <i class="fa fa-arrow-turn-down icon"></i> </button>
         </div>
         </form>
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="todo">Todo</button>
+            <button class="filter-btn" data-filter="achieved">Achieved</button>
+        </div>
         <div class="toDoListContainer"></div>
 <!-- button clear starts here -->
         <button id="btnClear" type="submit">Clear Completed Tasks</button>
@@ -31,7 +41,7 @@
 
 <!-- To do list ends here -->
 
-    <script src="../dist/main.js"></script>
+    <!-- Script will be injected by webpack -->
 
 <!-- body ends here -->
 
