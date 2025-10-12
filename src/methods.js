@@ -1,176 +1,377 @@
-// import from src modules folder
-
 import DataList from './datalist.js';
 
 // get listed inputs from local storage
-
 export default class display {
-  static getToDoListFromStorage = () => {
-    let toDoLists;
+	static getToDoListFromStorage = () => {
+	  let toDoLists;
 
-    if (JSON.parse(localStorage.getItem('LocalDataList')) === null) {
-      toDoLists = [];
-    } else {
-      toDoLists = JSON.parse(localStorage.getItem('LocalDataList'));
-    }
-    return toDoLists;
-  };
+	  if (JSON.parse(localStorage.getItem('LocalDataList')) === null) {
+	    toDoLists = [];
+	  } else {
+	    toDoLists = JSON.parse(localStorage.getItem('LocalDataList'));
+	  }
+	  return toDoLists;
+	};
 
-  // add listed inputs to the local storage
-  static addListToStorage = (toDoLists) => {
-    const item = JSON.stringify(toDoLists);
-    localStorage.setItem('LocalDataList', item);
-  };
+	// add listed inputs to the local storage
+	static addListToStorage = (toDoLists) => {
+	  const item = JSON.stringify(toDoLists);
+	  localStorage.setItem('LocalDataList', item);
+	};
 
-  // index list inputs by number
-  static newIndexNum = (toDoLists) => {
-    toDoLists.forEach((item, i) => {
-      item.index = i + 1;
-    });
-  }
+	// index list inputs by number
+	static newIndexNum = (toDoLists) => {
+	  toDoLists.forEach((item, i) => {
+	    item.index = i + 1;
+	  });
+	};
 
-  // delete from local storage
-    static deleteListData = (id) => {
-      let toDoLists = this.getToDoListFromStorage();
-      const ListItemToDelete = toDoLists[id];
+	// delete from local storage
+	static deleteListData = (id) => {
+	  const toDoLists = this.getToDoListFromStorage();
+	  const task = toDoLists[id];
 
-      toDoLists = toDoLists.filter((item) => item !== ListItemToDelete);
+	  // eslint-disable-next-line no-restricted-globals
+	  if (task && confirm(`Are you sure you want to delete "${task.description}"?`)) {
+	    const filteredTasks = toDoLists.filter((item, index) => index !== id);
+	    this.newIndexNum(filteredTasks);
+	    this.addListToStorage(filteredTasks);
+	    return true;
+	  }
+	  return false;
+	};
 
-      this.newIndexNum(toDoLists);
-      this.addListToStorage(toDoLists);
-    };
+	// Format date for display
+	static formatDate = (dateString) => {
+	  if (!dateString) return '';
+	  const date = new Date(dateString);
+	  const today = new Date();
+	  const diffTime = date - today;
+	  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    static ListInputUpdate = (newDescription, id) => {
-      const toDoLists = this.getToDoListFromStorage();
-      const updateList = toDoLists[id];
+	  if (diffDays === 0) return 'Today';
+	  if (diffDays === 1) return 'Tomorrow';
+	  if (diffDays === -1) return 'Yesterday';
+	  if (diffDays > 1) return `In ${diffDays} days`;
+	  if (diffDays < -1) return `${Math.abs(diffDays)} days ago`;
 
-      toDoLists.forEach((item) => {
-        if (item === updateList) {
-          item.description = newDescription;
-        }
-      });
+	  return date.toLocaleDateString();
+	};
 
-      this.addListToStorage(toDoLists);
-      this.showLists();
-    };
+	// Check if task is overdue
+	static isOverdue = (dateString) => {
+	  if (!dateString) return false;
+	  const dueDate = new Date(dateString);
+	  const today = new Date();
+	  today.setHours(0, 0, 0, 0);
+	  dueDate.setHours(0, 0, 0, 0);
+	  return dueDate < today;
+	};
 
-    static removeToDoListBtn = () => {
-      document.querySelectorAll('.remove_btn').forEach((button) => button.addEventListener('click', (event) => {
-        event.preventDefault();
-        let id;
-        if (button.id > 0) {
-          id = button.id - 1;
-        } else {
-          id = 0;
-        }
-        this.deleteListData(id);
-        this.showLists();
-      }));
-    };
+	static ListInputUpdate = (newDescription, id) => {
+	  const toDoLists = this.getToDoListFromStorage();
+	  const updateList = toDoLists[id];
 
-    // section created dynamiclly
-    static toDoListsHtml = ({ description, index }, statusCheck, statusCompleted) => {
-      const ul = document.createElement('ul');
-      ul.className = 'to-do';
-      ul.innerHTML = `
-        <li><input class="checkbox" id="${index}" type="checkbox" ${statusCheck}></li> 
-        <li><input id="LIST${index}" type="text" class="text${statusCompleted}" value="${description}" readonly></li>
-        <li class="remove-edit">
-        <button class="edit_list_btn" id="${index}"><i class="fa fa-ellipsis-v icon"></i></button>
-        <button class="remove_btn" id="${index}"><i class="fa fa-trash-can icon"></i></button>
-        </li>
-      `;
-      return ul;
-    }
+	  toDoLists.forEach((item) => {
+	    if (item === updateList) {
+	      item.description = newDescription;
+	    }
+	  });
 
-    // show listed tasks
-    static showLists = () => {
-      const toDoLists = this.getToDoListFromStorage();
-      document.querySelector('.toDoListContainer').innerHTML = '';
-      toDoLists.forEach((item) => {
-        let statusCheck;
-        let statusCompleted;
-        if (item.completed === true) {
-          statusCheck = 'checked';
-          statusCompleted = 'completed';
-        } else {
-          statusCheck = '';
-          statusCompleted = '';
-        }
-        document.querySelector('.toDoListContainer').appendChild(this.toDoListsHtml(item, statusCheck, statusCompleted));
-      });
+	  this.addListToStorage(toDoLists);
+	  // Get current filter from active button
+	  const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+	  this.showLists(activeFilter);
+	};
 
-      this.removeToDoListBtn();
-      this.editListBtnEvent();
-      this.updateListBtnEvent();
+	// section created dynamically with enhanced UI
+	static toDoListsHtml = (
+	  { description, index, dueDate, taskDescription },
+	  statusCheck,
+	  statusCompleted,
+	) => {
+	  const ul = document.createElement('ul');
+	  ul.className = 'to-do';
 
-      const event = new Event('listUpdated');
-      document.dispatchEvent(event);
-    };
+	  const dueDateDisplay = dueDate ? this.formatDate(dueDate) : '';
+	  const isOverdue = this.isOverdue(dueDate);
+	  const overdueClass = isOverdue && !statusCheck ? 'overdue' : '';
 
-    // add a task to a list
-    static addLists = (description) => {
-      const toDoLists = this.getToDoListFromStorage();
-      const index = toDoLists.length + 1;
-      const newtask = new DataList(description, false, index);
+	  ul.innerHTML = `
+			<li class="task-checkbox">
+				<input class="checkbox" id="${index}" type="checkbox" ${statusCheck}>
+			</li>
+			<li class="task-content">
+				<div class="task-main">
+					<input id="LIST${index}" type="text" class="text${statusCompleted}" value="${description}" readonly>
+					<div class="task-meta">
+						${
+							dueDateDisplay
+							  ? `<span class="due-date ${overdueClass}">
+							<i class="fa fa-calendar-alt"></i> ${dueDateDisplay}
+						</span>`
+							  : ''
+						}
+					</div>
+				</div>
+				${taskDescription ? `<div class="task-description" id="DESC${index}">${taskDescription}</div>` : ''}
+			</li>
+			<li class="task-actions">
+				<button class="expand_btn" id="${index}" aria-label="Expand task" title="View details">
+					<i class="fa fa-chevron-down icon"></i>
+				</button>
+				<button class="remove_btn" id="${index}" aria-label="Delete task" title="Delete task">
+					<i class="fa fa-trash-can icon"></i>
+				</button>
+			</li>
+		`;
+	  return ul;
+	};
 
-      toDoLists.push(newtask);
-      this.addListToStorage(toDoLists);
-      this.showLists();
-    }
+	// show listed tasks
+	static showLists = (filter = 'all') => {
+	  const toDoLists = this.getToDoListFromStorage();
+	  document.querySelector('.toDoListContainer').innerHTML = '';
 
-    // update to do list
-    static updateListBtnEvent = () => {
-      document.querySelectorAll('.text').forEach((input) => input.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          const inputListId = 'LIST';
-          const ListIdSelected = event.currentTarget.id;
-          let listID;
+	  // Filter tasks based on the current filter
+	  let filteredTasks = toDoLists;
+	  if (filter === 'completed') {
+	    filteredTasks = toDoLists.filter((item) => item.completed === true);
+	  } else if (filter === 'todo') {
+	    filteredTasks = toDoLists.filter((item) => item.completed === false);
+	  }
 
-          if (!ListIdSelected.includes('LIST')) {
-            listID = inputListId.concat(ListIdSelected);
-          } else {
-            listID = ListIdSelected;
-          }
+	  filteredTasks.forEach((item) => {
+	    let statusCheck;
+	    let statusCompleted;
+	    if (item.completed === true) {
+	      statusCheck = 'checked';
+	      statusCompleted = 'completed';
+	    } else {
+	      statusCheck = '';
+	      statusCompleted = '';
+	    }
+	    document
+	      .querySelector('.toDoListContainer')
+	      .appendChild(this.toDoListsHtml(item, statusCheck, statusCompleted));
+	  });
 
-          document.getElementById(listID).setAttribute('readonly', 'readonly');
-          this.ListInputUpdate(document.getElementById(listID).value, (Number(listID.replace('LIST', '')) - 1));
-        }
-      }));
-    }
+	  this.removeToDoListBtn();
+	  this.expandTaskEvent(); // Remove editListBtnEvent and updateListBtnEvent from here
 
-    // edit list
-    static editListBtnEvent = () => {
-      let previousList = null;
-      document.querySelectorAll('.edit_list_btn').forEach((button) => button.addEventListener('click', (event) => {
-        event.preventDefault();
-        const inputListId = 'LIST';
-        const ListIdSelected = event.currentTarget.id;
-        let listID;
+	  const event = new Event('listUpdated');
+	  document.dispatchEvent(event);
+	};
 
-        if (!ListIdSelected.includes('LIST')) {
-          listID = inputListId.concat(ListIdSelected);
-        } else {
-          listID = ListIdSelected;
-        }
+	// add a task to a list with enhanced data
+	static addLists = (description, dueDate = null, taskDescription = '') => {
+	  const toDoLists = this.getToDoListFromStorage();
+	  const index = toDoLists.length + 1;
+	  const newtask = new DataList(description, false, index, dueDate, taskDescription);
 
-        if (previousList !== null) {
-          previousList.getElementById(listID).removeAttribute('readonly');
-        }
+	  toDoLists.push(newtask);
+	  this.addListToStorage(toDoLists);
+	  const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+	  this.showLists(activeFilter);
+	};
 
-        const listItem = event.target.closest('li');
-        previousList = listItem;
-        const ulItem = event.target.closest('ul');
+	// Update task with new data
+	static updateTask = (id, updates) => {
+	  const toDoLists = this.getToDoListFromStorage();
+	  const task = toDoLists[id];
 
-        listItem.style.background = 'rgb(230, 230, 184)';
-        ulItem.style.background = 'rgb(230, 230, 184)';
+	  if (task) {
+	    Object.assign(task, updates);
+	    this.addListToStorage(toDoLists);
+	    const activeFilter =
+				document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+	    this.showLists(activeFilter);
+	  }
+	};
 
-        document.getElementById(listID).removeAttribute('readonly');
-        document.getElementById(listID).focus();
-        document.getElementById(listID).style.background = 'rgb(230, 230, 184)';
-        listItem.querySelector('.edit_list_btn').style.display = 'none';
-        listItem.querySelector('.remove_btn').style.display = 'block';
-      }));
-    };
+	// Show task details in expanded view with editable title
+	static showTaskDetails = (taskId) => {
+	  const toDoLists = this.getToDoListFromStorage();
+	  const task = toDoLists[taskId - 1];
+	  const taskElement = document.getElementById(`LIST${taskId}`).closest('.to-do');
+
+	  let detailsElement = taskElement.querySelector('.task-details');
+	  if (!detailsElement) {
+	    detailsElement = document.createElement('div');
+	    detailsElement.className = 'task-details';
+	    taskElement.appendChild(detailsElement);
+	  }
+
+	  detailsElement.innerHTML = `
+			<div class="task-detail-item">
+				<label for="task-title-${taskId}">Task Title:</label>
+				<input type="text"
+					   id="task-title-${taskId}"
+					   class="task-title-input"
+					   value="${task.description}"
+					   data-task-id="${taskId}"
+					   placeholder="Enter task title...">
+			</div>
+			<div class="task-detail-item">
+				<label for="due-date-${taskId}">Due Date:</label>
+				<input type="date"
+					   id="due-date-${taskId}"
+					   class="due-date-input"
+					   value="${task.dueDate || ''}"
+					   data-task-id="${taskId}">
+			</div>
+			<div class="task-detail-item">
+				<label for="task-desc-${taskId}">Description:</label>
+				<textarea id="task-desc-${taskId}"
+						  class="task-desc-input"
+						  placeholder="Add task description..."
+						  data-task-id="${taskId}">${task.taskDescription || ''}</textarea>
+			</div>
+			<div class="task-detail-actions">
+				<button class="save-details-btn" data-task-id="${taskId}">
+					<i class="fa fa-save"></i>
+					Save Changes
+				</button>
+				<button class="cancel-details-btn" data-task-id="${taskId}">
+					<i class="fa fa-times"></i>
+					Cancel
+				</button>
+			</div>
+		`;
+
+	  this.attachDetailEventListeners();
+
+	  // Focus on the title input for immediate editing
+	  const titleInput = detailsElement.querySelector('.task-title-input');
+	  if (titleInput) {
+	    titleInput.focus();
+	    titleInput.select();
+	  }
+	};
+
+	// Hide task details
+	static hideTaskDetails = (taskId) => {
+	  const taskElement = document.getElementById(`LIST${taskId}`).closest('.to-do');
+	  const detailsElement = taskElement.querySelector('.task-details');
+	  if (detailsElement) {
+	    detailsElement.remove();
+	  }
+	};
+
+	// Attach event listeners for detail inputs
+	static attachDetailEventListeners = () => {
+	  // Save details button
+	  document.querySelectorAll('.save-details-btn').forEach((btn) => {
+	    if (!btn.hasAttribute('data-listener-attached')) {
+	      btn.setAttribute('data-listener-attached', 'true');
+	      btn.addEventListener('click', (e) => {
+	        const { taskId } = e.target.dataset;
+	        const taskElement = e.target.closest('.to-do');
+	        const titleInput = taskElement.querySelector('.task-title-input');
+	        const dueDateInput = taskElement.querySelector('.due-date-input');
+	        const descInput = taskElement.querySelector('.task-desc-input');
+
+	        // Update task with all new data
+	        this.updateTask(taskId - 1, {
+	          description: titleInput.value.trim() || 'Untitled Task',
+	          dueDate: dueDateInput.value || null,
+	          taskDescription: descInput.value || '',
+	        });
+
+	        // Close the expanded view
+	        const expandBtn = taskElement.querySelector('.expand_btn');
+	        if (expandBtn) {
+	          const icon = expandBtn.querySelector('i');
+	          icon.className = 'fa fa-chevron-down icon';
+	          taskElement.classList.remove('expanded');
+	          this.hideTaskDetails(taskId);
+	        }
+	      });
+	    }
+	  });
+
+	  // Cancel details button
+	  document.querySelectorAll('.cancel-details-btn').forEach((btn) => {
+	    if (!btn.hasAttribute('data-listener-attached')) {
+	      btn.setAttribute('data-listener-attached', 'true');
+	      btn.addEventListener('click', (e) => {
+	        const { taskId } = e.target.dataset;
+	        const taskElement = e.target.closest('.to-do');
+
+	        // Close the expanded view without saving
+	        const expandBtn = taskElement.querySelector('.expand_btn');
+	        if (expandBtn) {
+	          const icon = expandBtn.querySelector('i');
+	          icon.className = 'fa fa-chevron-down icon';
+	          taskElement.classList.remove('expanded');
+	          this.hideTaskDetails(taskId);
+	        }
+	      });
+	    }
+	  });
+
+	  // Enter key to save
+	  document.querySelectorAll('.task-title-input').forEach((input) => {
+	    if (!input.hasAttribute('data-listener-attached')) {
+	      input.setAttribute('data-listener-attached', 'true');
+	      input.addEventListener('keydown', (e) => {
+	        if (e.key === 'Enter') {
+	          e.preventDefault();
+	          const saveBtn = e.target
+	            .closest('.task-details')
+	            .querySelector('.save-details-btn');
+	          if (saveBtn) saveBtn.click();
+	        }
+	        if (e.key === 'Escape') {
+	          e.preventDefault();
+	          const cancelBtn = e.target
+	            .closest('.task-details')
+	            .querySelector('.cancel-details-btn');
+	          if (cancelBtn) cancelBtn.click();
+	        }
+	      });
+	    }
+	  });
+	};
+
+	static removeToDoListBtn = () => {
+	  document.querySelectorAll('.remove_btn').forEach((button) =>
+	    button.addEventListener('click', (event) => {
+	      event.preventDefault();
+	      event.stopPropagation(); // Prevent expand/collapse when clicking delete
+	      let id;
+	      if (button.id > 0) {
+	        id = button.id - 1;
+	      } else {
+	        id = 0;
+	      }
+
+	      if (this.deleteListData(id)) {
+	        const activeFilter =
+						document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+	        this.showLists(activeFilter);
+	      }
+	    }),
+	  );
+	};
+
+	// Add expand/collapse functionality
+	static expandTaskEvent = () => {
+	  document.querySelectorAll('.expand_btn').forEach((button) =>
+	    button.addEventListener('click', (event) => {
+	      event.preventDefault();
+	      const taskElement = event.target.closest('.to-do');
+	      const icon = button.querySelector('i');
+
+	      taskElement.classList.toggle('expanded');
+	      if (taskElement.classList.contains('expanded')) {
+	        icon.className = 'fa fa-chevron-up icon';
+	        this.showTaskDetails(button.id);
+	      } else {
+	        icon.className = 'fa fa-chevron-down icon';
+	        this.hideTaskDetails(button.id);
+	      }
+	    }),
+	  );
+	};
 }
