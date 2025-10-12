@@ -94,26 +94,6 @@ export default class display {
 		this.showLists(activeFilter);
 	};
 
-	static removeToDoListBtn = () => {
-		document.querySelectorAll(".remove_btn").forEach((button) =>
-			button.addEventListener("click", (event) => {
-				event.preventDefault();
-				let id;
-				if (button.id > 0) {
-					id = button.id - 1;
-				} else {
-					id = 0;
-				}
-
-				if (this.deleteListData(id)) {
-					const activeFilter =
-						document.querySelector(".filter-btn.active")?.dataset.filter || "all";
-					this.showLists(activeFilter);
-				}
-			}),
-		);
-	};
-
 	// section created dynamically with enhanced UI
 	static toDoListsHtml = (
 		{ description, index, dueDate, taskDescription },
@@ -147,14 +127,11 @@ export default class display {
 				${taskDescription ? `<div class="task-description" id="DESC${index}">${taskDescription}</div>` : ""}
 			</li>
 			<li class="task-actions">
-				<button class="edit_list_btn" id="${index}" aria-label="Edit task" title="Edit task">
-					<i class="fa fa-edit icon"></i>
+				<button class="expand_btn" id="${index}" aria-label="Expand task" title="View details">
+					<i class="fa fa-chevron-down icon"></i>
 				</button>
 				<button class="remove_btn" id="${index}" aria-label="Delete task" title="Delete task">
 					<i class="fa fa-trash-can icon"></i>
-				</button>
-				<button class="expand_btn" id="${index}" aria-label="Expand task" title="View details">
-					<i class="fa fa-chevron-down icon"></i>
 				</button>
 			</li>
 		`;
@@ -190,9 +167,7 @@ export default class display {
 		});
 
 		this.removeToDoListBtn();
-		this.editListBtnEvent();
-		this.updateListBtnEvent();
-		this.expandTaskEvent(); // Add expand functionality
+		this.expandTaskEvent(); // Remove editListBtnEvent and updateListBtnEvent from here
 
 		const event = new Event("listUpdated");
 		document.dispatchEvent(event);
@@ -210,116 +185,184 @@ export default class display {
 		this.showLists(activeFilter);
 	};
 
-	// update to do list
-	static updateListBtnEvent = () => {
-		document.querySelectorAll(".text").forEach((input) =>
-			input.addEventListener("keypress", (event) => {
-				if (event.key === "Enter") {
-					event.preventDefault();
-					const inputListId = "LIST";
-					const ListIdSelected = event.currentTarget.id;
-					let listID;
+	// Update task with new data
+	static updateTask = (id, updates) => {
+		const toDoLists = this.getToDoListFromStorage();
+		const task = toDoLists[id];
 
-					if (!ListIdSelected.includes("LIST")) {
-						listID = inputListId.concat(ListIdSelected);
-					} else {
-						listID = ListIdSelected;
-					}
-
-					document.getElementById(listID).setAttribute("readonly", "readonly");
-					this.ListInputUpdate(
-						document.getElementById(listID).value,
-						Number(listID.replace("LIST", "")) - 1,
-					);
-				}
-			}),
-		);
+		if (task) {
+			Object.assign(task, updates);
+			this.addListToStorage(toDoLists);
+			const activeFilter =
+				document.querySelector(".filter-btn.active")?.dataset.filter || "all";
+			this.showLists(activeFilter);
+		}
 	};
 
-	// Reset editing state for all items
-	static resetAllEditStates = () => {
-		document.querySelectorAll(".text, .textcompleted").forEach((input) => {
-			input.setAttribute("readonly", "readonly");
-			input.style.background = "";
-			const parentUl = input.closest("ul");
-			if (parentUl) {
-				parentUl.style.background = "";
-				const editBtn = parentUl.querySelector(".edit_list_btn");
-				const removeBtn = parentUl.querySelector(".remove_btn");
-				if (editBtn) editBtn.style.display = "block";
-				if (removeBtn) removeBtn.style.display = "none";
+	// Show task details in expanded view with editable title
+	static showTaskDetails = (taskId) => {
+		const toDoLists = this.getToDoListFromStorage();
+		const task = toDoLists[taskId - 1];
+		const taskElement = document.getElementById(`LIST${taskId}`).closest(".to-do");
+
+		let detailsElement = taskElement.querySelector(".task-details");
+		if (!detailsElement) {
+			detailsElement = document.createElement("div");
+			detailsElement.className = "task-details";
+			taskElement.appendChild(detailsElement);
+		}
+
+		detailsElement.innerHTML = `
+			<div class="task-detail-item">
+				<label for="task-title-${taskId}">Task Title:</label>
+				<input type="text"
+					   id="task-title-${taskId}"
+					   class="task-title-input"
+					   value="${task.description}"
+					   data-task-id="${taskId}"
+					   placeholder="Enter task title...">
+			</div>
+			<div class="task-detail-item">
+				<label for="due-date-${taskId}">Due Date:</label>
+				<input type="date"
+					   id="due-date-${taskId}"
+					   class="due-date-input"
+					   value="${task.dueDate || ""}"
+					   data-task-id="${taskId}">
+			</div>
+			<div class="task-detail-item">
+				<label for="task-desc-${taskId}">Description:</label>
+				<textarea id="task-desc-${taskId}"
+						  class="task-desc-input"
+						  placeholder="Add task description..."
+						  data-task-id="${taskId}">${task.taskDescription || ""}</textarea>
+			</div>
+			<div class="task-detail-actions">
+				<button class="save-details-btn" data-task-id="${taskId}">
+					<i class="fa fa-save"></i>
+					Save Changes
+				</button>
+				<button class="cancel-details-btn" data-task-id="${taskId}">
+					<i class="fa fa-times"></i>
+					Cancel
+				</button>
+			</div>
+		`;
+
+		this.attachDetailEventListeners();
+
+		// Focus on the title input for immediate editing
+		const titleInput = detailsElement.querySelector(".task-title-input");
+		if (titleInput) {
+			titleInput.focus();
+			titleInput.select();
+		}
+	};
+
+	// Hide task details
+	static hideTaskDetails = (taskId) => {
+		const taskElement = document.getElementById(`LIST${taskId}`).closest(".to-do");
+		const detailsElement = taskElement.querySelector(".task-details");
+		if (detailsElement) {
+			detailsElement.remove();
+		}
+	};
+
+	// Attach event listeners for detail inputs
+	static attachDetailEventListeners = () => {
+		// Save details button
+		document.querySelectorAll(".save-details-btn").forEach((btn) => {
+			if (!btn.hasAttribute("data-listener-attached")) {
+				btn.setAttribute("data-listener-attached", "true");
+				btn.addEventListener("click", (e) => {
+					const { taskId } = e.target.dataset;
+					const taskElement = e.target.closest(".to-do");
+					const titleInput = taskElement.querySelector(".task-title-input");
+					const dueDateInput = taskElement.querySelector(".due-date-input");
+					const descInput = taskElement.querySelector(".task-desc-input");
+
+					// Update task with all new data
+					this.updateTask(taskId - 1, {
+						description: titleInput.value.trim() || "Untitled Task",
+						dueDate: dueDateInput.value || null,
+						taskDescription: descInput.value || "",
+					});
+
+					// Close the expanded view
+					const expandBtn = taskElement.querySelector(".expand_btn");
+					if (expandBtn) {
+						const icon = expandBtn.querySelector("i");
+						icon.className = "fa fa-chevron-down icon";
+						taskElement.classList.remove("expanded");
+						this.hideTaskDetails(taskId);
+					}
+				});
+			}
+		});
+
+		// Cancel details button
+		document.querySelectorAll(".cancel-details-btn").forEach((btn) => {
+			if (!btn.hasAttribute("data-listener-attached")) {
+				btn.setAttribute("data-listener-attached", "true");
+				btn.addEventListener("click", (e) => {
+					const { taskId } = e.target.dataset;
+					const taskElement = e.target.closest(".to-do");
+
+					// Close the expanded view without saving
+					const expandBtn = taskElement.querySelector(".expand_btn");
+					if (expandBtn) {
+						const icon = expandBtn.querySelector("i");
+						icon.className = "fa fa-chevron-down icon";
+						taskElement.classList.remove("expanded");
+						this.hideTaskDetails(taskId);
+					}
+				});
+			}
+		});
+
+		// Enter key to save
+		document.querySelectorAll(".task-title-input").forEach((input) => {
+			if (!input.hasAttribute("data-listener-attached")) {
+				input.setAttribute("data-listener-attached", "true");
+				input.addEventListener("keydown", (e) => {
+					if (e.key === "Enter") {
+						e.preventDefault();
+						const saveBtn = e.target
+							.closest(".task-details")
+							.querySelector(".save-details-btn");
+						if (saveBtn) saveBtn.click();
+					}
+					if (e.key === "Escape") {
+						e.preventDefault();
+						const cancelBtn = e.target
+							.closest(".task-details")
+							.querySelector(".cancel-details-btn");
+						if (cancelBtn) cancelBtn.click();
+					}
+				});
 			}
 		});
 	};
 
-	// Enable editing for a specific item
-	static enableEditMode = (listID, ulItem, inputElement) => {
-		ulItem.style.background = "rgb(230, 230, 184)";
-		inputElement.removeAttribute("readonly");
-		inputElement.focus();
-		inputElement.style.background = "rgb(230, 230, 184)";
-
-		const editBtn = ulItem.querySelector(".edit_list_btn");
-		const removeBtn = ulItem.querySelector(".remove_btn");
-		if (editBtn) editBtn.style.display = "none";
-		if (removeBtn) removeBtn.style.display = "block";
-
-		// Add event listeners
-		inputElement.addEventListener(
-			"blur",
-			() => {
-				this.saveEdit(inputElement, ulItem);
-			},
-			{ once: true },
-		);
-
-		inputElement.addEventListener(
-			"keydown",
-			(e) => {
-				if (e.key === "Escape") {
-					this.saveEdit(inputElement, ulItem);
-				}
-			},
-			{ once: true },
-		);
-	};
-
-	// edit list
-	static editListBtnEvent = () => {
-		document.querySelectorAll(".edit_list_btn").forEach((button) =>
+	static removeToDoListBtn = () => {
+		document.querySelectorAll(".remove_btn").forEach((button) =>
 			button.addEventListener("click", (event) => {
 				event.preventDefault();
-				const ListIdSelected = event.currentTarget.id;
-				const listID = ListIdSelected.includes("LIST")
-					? ListIdSelected
-					: `LIST${ListIdSelected}`;
+				event.stopPropagation(); // Prevent expand/collapse when clicking delete
+				let id;
+				if (button.id > 0) {
+					id = button.id - 1;
+				} else {
+					id = 0;
+				}
 
-				this.resetAllEditStates();
-
-				const ulItem = event.target.closest("ul");
-				const inputElement = document.getElementById(listID);
-
-				if (inputElement && ulItem) {
-					this.enableEditMode(listID, ulItem, inputElement);
+				if (this.deleteListData(id)) {
+					const activeFilter =
+						document.querySelector(".filter-btn.active")?.dataset.filter || "all";
+					this.showLists(activeFilter);
 				}
 			}),
 		);
-	};
-
-	// Save edit helper method
-	static saveEdit = (inputElement, ulItem) => {
-		inputElement.setAttribute("readonly", "readonly");
-		inputElement.style.background = "";
-		ulItem.style.background = "";
-
-		const editBtn = ulItem.querySelector(".edit_list_btn");
-		const removeBtn = ulItem.querySelector(".remove_btn");
-		if (editBtn) editBtn.style.display = "block";
-		if (removeBtn) removeBtn.style.display = "none";
-
-		// Update the task in storage
-		const listId = inputElement.id.replace("LIST", "");
-		this.ListInputUpdate(inputElement.value, Number(listId) - 1);
 	};
 
 	// Add expand/collapse functionality
@@ -340,64 +383,5 @@ export default class display {
 				}
 			}),
 		);
-	};
-
-	// Show task details in expanded view
-	static showTaskDetails = (taskId) => {
-		const toDoLists = this.getToDoListFromStorage();
-		const task = toDoLists[taskId - 1];
-		const taskElement = document.getElementById(`LIST${taskId}`).closest(".to-do");
-
-		let detailsElement = taskElement.querySelector(".task-details");
-		if (!detailsElement) {
-			detailsElement = document.createElement("div");
-			detailsElement.className = "task-details";
-			taskElement.appendChild(detailsElement);
-		}
-
-		detailsElement.innerHTML = `
-			<div class="task-detail-item">
-				<label>Due Date:</label>
-				<input type="date" class="due-date-input" value="${task.dueDate || ""}" data-task-id="${taskId}">
-			</div>
-			<div class="task-detail-item">
-				<label>Description:</label>
-				<textarea class="task-desc-input" placeholder="Add task description..." data-task-id="${taskId}">${
-			task.taskDescription || ""
-		}</textarea>
-			</div>
-			<div class="task-detail-actions">
-				<button class="save-details-btn" data-task-id="${taskId}">Save Changes</button>
-			</div>
-		`;
-
-		this.attachDetailEventListeners();
-	};
-
-	// Hide task details
-	static hideTaskDetails = (taskId) => {
-		const taskElement = document.getElementById(`LIST${taskId}`).closest(".to-do");
-		const detailsElement = taskElement.querySelector(".task-details");
-		if (detailsElement) {
-			detailsElement.remove();
-		}
-	};
-
-	// Attach event listeners for detail inputs
-	static attachDetailEventListeners = () => {
-		// Save details button
-		document.querySelectorAll(".save-details-btn").forEach((btn) => {
-			btn.addEventListener("click", (e) => {
-				const { taskId } = e.target.dataset;
-				const taskElement = e.target.closest(".to-do");
-				const dueDateInput = taskElement.querySelector(".due-date-input");
-				const descInput = taskElement.querySelector(".task-desc-input");
-
-				this.updateTask(taskId - 1, {
-					dueDate: dueDateInput.value || null,
-					taskDescription: descInput.value || "",
-				});
-			});
-		});
 	};
 }
