@@ -1,39 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <title>Awesome To Do List</title>
-</head>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" />
+		<title>Awesome To Do List</title>
+	</head>
 
-<!-- body starts here -->
+	<!-- body starts here -->
 
-<body>
+	<body>
+		<!-- To do list starts here -->
 
-<!-- To do list starts here -->
+		<div id="toDoList">
+			<div class="title">
+				<h1 class="ttdl">Today's To Do List</h1>
+				<div class="header-icons">
+					<button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">
+						<i class="fa fa-moon"></i>
+					</button>
+					<i class="fa fa-arrows-rotate icon"></i>
+				</div>
+			</div>
+			<form id="inputList" action="#" method="post">
+				<div class="inputTask">
+					<input
+						id="addList"
+						type="text"
+						placeholder="Add to your to do list..."
+						maxlength="80"
+						required />
+					<button class="submiticon" type="submit">
+						<i class="fa fa-arrow-turn-down icon"></i>
+					</button>
+				</div>
+			</form>
 
-    <div id="toDoList">
-        <div class="title">
-            <h1 class="ttdl">Today's To Do List</h1>
-            <i class="fa fa-arrows-rotate icon"></i>
-        </div>
-        <form id="inputList" action="#" method="post">
-        <div class="inputTask">
-        <input id="addList" type="text" placeholder="Add to your to do list..." maxlength="80" required>
-        <button class="submiticon" type="submit"> <i class="fa fa-arrow-turn-down icon"></i> </button>
-        </div>
-        </form>
-        <div class="toDoListContainer"></div>
-<!-- button clear starts here -->
-        <button id="btnClear" type="submit">Clear Completed Tasks</button>
-    </div>
+			<!-- Filter buttons -->
+			<div class="filter-container">
+				<button class="filter-btn active" data-filter="all">All</button>
+				<button class="filter-btn" data-filter="todo">Todo</button>
+				<button class="filter-btn" data-filter="completed">Achieved</button>
+			</div>
 
-<!-- To do list ends here -->
+			<div class="toDoListContainer"></div>
+			<!-- button clear starts here -->
+			<button id="btnClear" type="submit">Clear Completed Tasks</button>
+		</div>
 
-    <script src="../dist/main.js"></script>
+		<!-- To do list ends here -->
 
-<!-- body ends here -->
+		<script src="../dist/main.js"></script>
 
-</body>
+		<!-- body ends here -->
+	</body>
 </html>
