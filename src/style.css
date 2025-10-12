@@ -124,7 +124,7 @@ i {
 	pointer-events: none;
 }
 
-/* Enhanced Input Form */
+/* Input Form */
 #inputList {
 	padding: 30px;
 	background: var(--secondary-bg);
@@ -434,7 +434,6 @@ input {
 /* Focus indicators for accessibility */
 .theme-toggle:focus,
 .submit-icon:focus,
-.submit-icon:focus,
 .filter-btn:focus,
 #btnClear:focus {
 	outline: 2px solid var(--accent-color);
@@ -469,7 +468,6 @@ input {
 		align-items: stretch;
 	}
 
-	.submit-icon,
 	.submit-icon {
 		padding: 12px;
 		align-self: stretch;
@@ -726,7 +724,6 @@ input {
 	transform: translateY(0);
 }
 
-/* Enhanced visual feedback for expanded tasks */
 .to-do.expanded .task-content {
 	background: rgba(255, 255, 255, 0.5);
 	border-radius: 8px;
@@ -738,7 +735,6 @@ input {
 	background: rgba(0, 0, 0, 0.2);
 }
 
-/* Improved task actions alignment for expanded view */
 .to-do.expanded .task-actions {
 	align-items: flex-start;
 	margin-top: 4px;
