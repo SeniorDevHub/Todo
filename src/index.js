@@ -1,26 +1,89 @@
 // import _ from 'lodash';
-import './style.css';
+/* eslint-disable operator-linebreak */
+/* eslint-disable implicit-arrow-linebreak */
+/* eslint-disable function-paren-newline */
+/* eslint-disable indent */
+/* eslint-disable no-tabs */
+/* eslint-disable quotes */
+// import from src modules folder
+
+import "./style.css";
 
 // import from src modules
-import display from './methods.js';
-import Interactive from './interactive.js';
+import display from "./methods.js";
+import Interactive from "./interactive.js";
 
-const inputList = document.getElementById('inputList');
-const addList = document.getElementById('addList');
+const inputList = document.getElementById("inputList");
+const addList = document.getElementById("addList");
+let currentFilter = "all";
 
-inputList.addEventListener('submit', (e) => {
-  e.preventDefault();
-  display.addLists(addList.value);
-  addList.value = '';
+// Theme management
+const themeToggle = document.getElementById("themeToggle");
+const { body } = document;
+
+function updateThemeIcon(theme) {
+	const icon = themeToggle.querySelector("i");
+	if (theme === "dark") {
+		icon.className = "fa fa-sun";
+	} else {
+		icon.className = "fa fa-moon";
+	}
+}
+
+// Load saved theme or default to light
+const savedTheme = localStorage.getItem("theme") || "light";
+body.setAttribute("data-theme", savedTheme);
+updateThemeIcon(savedTheme);
+
+// Theme toggle event
+themeToggle.addEventListener("click", () => {
+	const currentTheme = body.getAttribute("data-theme");
+	const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+	body.setAttribute("data-theme", newTheme);
+	localStorage.setItem("theme", newTheme);
+	updateThemeIcon(newTheme);
 });
 
-document.querySelector('#btnClear').addEventListener('click', Interactive.clearCompletedToDoLists);
+// Filter functionality
+document.querySelectorAll(".filter-btn").forEach((btn) => {
+	btn.addEventListener("click", (e) => {
+		// Remove active class from all buttons
+		document.querySelectorAll(".filter-btn").forEach((button) => {
+			button.classList.remove("active");
+		});
 
-window.addEventListener('load', () => {
-  document.addEventListener('listUpdated', () => {
-    Interactive.checkStatusEvent();
-  }, false);
-  Interactive.checkStatusEvent();
+		// Add active class to clicked button
+		e.target.classList.add("active");
+
+		// Update current filter and refresh the list
+		currentFilter = e.target.dataset.filter;
+		display.showLists(currentFilter);
+	});
 });
 
-display.showLists();
+inputList.addEventListener("submit", (e) => {
+	e.preventDefault();
+	display.addLists(addList.value);
+	addList.value = "";
+	// Refresh with current filter
+	display.showLists(currentFilter);
+});
+
+document.querySelector("#btnClear").addEventListener("click", () => {
+	Interactive.clearCompletedToDoLists();
+	display.showLists(currentFilter);
+});
+
+window.addEventListener("load", () => {
+	document.addEventListener(
+		"listUpdated",
+		() => {
+			Interactive.checkStatusEvent();
+		},
+		false,
+	);
+	Interactive.checkStatusEvent();
+});
+
+display.showLists(currentFilter);
