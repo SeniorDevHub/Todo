@@ -81,7 +81,7 @@ export default class display {
 		);
 	};
 
-	// section created dynamiclly
+	// section created dynamically
 	static toDoListsHtml = ({ description, index }, statusCheck, statusCompleted) => {
 		const ul = document.createElement("ul");
 		ul.className = "to-do";
