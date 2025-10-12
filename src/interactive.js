@@ -1,53 +1,42 @@
-/* eslint-disable operator-linebreak */
-/* eslint-disable implicit-arrow-linebreak */
-/* eslint-disable function-paren-newline */
-/* eslint-disable indent */
-/* eslint-disable no-tabs */
-/* eslint-disable quotes */
-// import from src modules folder
-
-import display from "./methods.js";
+import display from './methods.js';
 
 export default class Interactive {
 	static changeCompletedListCheck = (statusCheck, id) => {
-		const toDoLists = display.getToDoListFromStorage();
-		toDoLists[id].completed = statusCheck;
-		display.addListToStorage(toDoLists);
-		// Get current filter from active button
-		const activeFilter = document.querySelector(".filter-btn.active")?.dataset.filter || "all";
-		display.showLists(activeFilter);
+	  const toDoLists = display.getToDoListFromStorage();
+	  toDoLists[id].completed = statusCheck;
+	  display.addListToStorage(toDoLists);
+	  // Get current filter from active button
+	  const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+	  display.showLists(activeFilter);
 	};
 
 	// checkbox status
-	static checkStatusEvent = () =>
-		document.querySelectorAll(".checkbox").forEach((checkbox) =>
-			checkbox.addEventListener("change", () => {
-				let statusCheck;
-				let id;
-				if (checkbox.id > 0) {
-					id = checkbox.id - 1;
-				} else {
-					id = 0;
-				}
+	static checkStatusEvent = () => document.querySelectorAll('.checkbox').forEach((checkbox) => checkbox.addEventListener('change', () => {
+	      let statusCheck;
+	      let id;
+	      if (checkbox.id > 0) {
+	        id = checkbox.id - 1;
+	      } else {
+	        id = 0;
+	      }
 
-				if (checkbox.checked === true) {
-					statusCheck = true;
-				} else if (checkbox.checked !== true) {
-					statusCheck = false;
-				}
+	      if (checkbox.checked === true) {
+	        statusCheck = true;
+	      } else if (checkbox.checked !== true) {
+	        statusCheck = false;
+	      }
 
-				this.changeCompletedListCheck(statusCheck, id);
-			}),
-		);
+	      this.changeCompletedListCheck(statusCheck, id);
+	    }));
 
 	static clearCompletedToDoLists = () => {
-		let toDoLists = display.getToDoListFromStorage();
+	  let toDoLists = display.getToDoListFromStorage();
 
-		toDoLists = toDoLists.filter((item) => item.completed !== true);
-		display.newIndexNum(toDoLists);
-		display.addListToStorage(toDoLists);
-		// Get current filter from active button
-		const activeFilter = document.querySelector(".filter-btn.active")?.dataset.filter || "all";
-		display.showLists(activeFilter);
+	  toDoLists = toDoLists.filter((item) => item.completed !== true);
+	  display.newIndexNum(toDoLists);
+	  display.addListToStorage(toDoLists);
+	  // Get current filter from active button
+	  const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+	  display.showLists(activeFilter);
 	};
 }
