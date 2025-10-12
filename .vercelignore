@@ -1,0 +1,7 @@
+node_modules
+src
+webpack.config.js
+package-lock.json
+.git
+*.log
+dist
