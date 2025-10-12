@@ -124,7 +124,7 @@ i {
 	pointer-events: none;
 }
 
-/* Input Form */
+/* Enhanced Input Form */
 #inputList {
 	padding: 30px;
 	background: var(--secondary-bg);
@@ -132,14 +132,15 @@ i {
 
 .inputTask {
 	display: flex;
-	gap: 10px;
+	flex-direction: column;
+	gap: 15px;
 	max-width: 100%;
-	align-items: center;
 }
 
-.inputTask i {
-	rotate: 90deg;
-	cursor: pointer;
+.input-group {
+	display: flex;
+	gap: 10px;
+	align-items: center;
 }
 
 #addList {
@@ -154,29 +155,36 @@ i {
 	outline: none;
 }
 
-#addList:focus {
+#addDueDate {
+	padding: 15px 20px;
+	border: 2px solid var(--border-color);
+	border-radius: 12px;
+	font-size: 1rem;
+	background: var(--card-bg);
+	color: var(--text-primary);
+	transition: var(--transition);
+	outline: none;
+	min-width: 160px;
+}
+
+#addDescription {
+	padding: 15px 20px;
+	border: 2px solid var(--border-color);
+	border-radius: 12px;
+	font-size: 1rem;
+	background: var(--card-bg);
+	color: var(--text-primary);
+	transition: var(--transition);
+	outline: none;
+	resize: vertical;
+	font-family: inherit;
+}
+
+#addList:focus,
+#addDueDate:focus,
+#addDescription:focus {
 	border-color: var(--accent-color);
 	box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.submiticon {
-	background: var(--accent-color);
-	border: none;
-	color: white;
-	padding: 15px 20px;
-	border-radius: 12px;
-	cursor: pointer;
-	transition: var(--transition);
-	font-size: 1.1rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 60px;
-}
-
-.submiticon:hover {
-	background: var(--accent-hover);
-	transform: translateY(-2px);
 }
 
 /* Filter Buttons */
@@ -224,7 +232,7 @@ i {
 .to-do {
 	background: var(--card-bg);
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	padding: 20px 30px;
 	border-bottom: 1px solid var(--border-color);
 	transition: var(--transition);
@@ -293,19 +301,20 @@ input {
 }
 
 .edit_list_btn,
-.remove_btn {
+.remove_btn,
+.expand_btn {
 	background: transparent;
 	border: none;
 	cursor: pointer;
 	padding: 8px;
 	border-radius: 50%;
 	transition: var(--transition);
-	font-size: 1rem;
+	font-size: 0.9rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 35px;
-	height: 35px;
+	width: 32px;
+	height: 32px;
 }
 
 .edit_list_btn {
@@ -325,6 +334,84 @@ input {
 .remove_btn:hover {
 	background: rgba(220, 53, 69, 0.1);
 	color: var(--danger-color);
+}
+
+.expand_btn {
+	color: var(--text-secondary);
+}
+
+.expand_btn:hover {
+	background: var(--secondary-bg);
+	color: var(--accent-color);
+}
+
+/* Enhanced Todo Items */
+.to-do {
+	background: var(--card-bg);
+	display: flex;
+	align-items: flex-start;
+	padding: 20px 30px;
+	border-bottom: 1px solid var(--border-color);
+	transition: var(--transition);
+	list-style: none;
+	gap: 15px;
+	min-height: 70px;
+	animation: slideIn 0.3s ease;
+}
+
+.task-checkbox {
+	display: flex;
+	align-items: flex-start;
+	padding-top: 2px;
+}
+
+.task-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.task-main {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.task-meta {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+.due-date {
+	font-size: 0.85rem;
+	color: var(--text-secondary);
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.due-date.overdue {
+	color: var(--danger-color);
+	font-weight: 600;
+}
+
+.task-description {
+	font-size: 0.9rem;
+	color: var(--text-secondary);
+	line-height: 1.4;
+	margin-top: 5px;
+	padding: 8px 12px;
+	background: var(--secondary-bg);
+	border-radius: 8px;
+}
+
+.task-actions {
+	display: flex;
+	gap: 5px;
+	align-items: flex-start;
+	padding-top: 2px;
 }
 
 /* Clear Button */
@@ -406,10 +493,16 @@ input {
 	}
 
 	.inputTask {
-		flex-direction: column;
+		gap: 10px;
 	}
 
-	.submiticon {
+	.input-group {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.submit-icon {
+		display: none;
 		padding: 12px;
 		align-self: stretch;
 	}
@@ -434,10 +527,15 @@ input {
 	}
 
 	.edit_list_btn,
-	.remove_btn {
-		width: 30px;
-		height: 30px;
-		font-size: 0.9rem;
+	.remove_btn,
+	.expand_btn {
+		width: 28px;
+		height: 28px;
+		font-size: 0.8rem;
+	}
+
+	.task-details {
+		padding: 15px;
 	}
 }
 
@@ -470,6 +568,10 @@ input {
 	.to-do {
 		padding: 12px 15px;
 		gap: 10px;
+	}
+
+	.task-details {
+		padding: 12px;
 	}
 
 	.checkbox {

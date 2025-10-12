@@ -29,15 +29,25 @@
 			</div>
 			<form id="inputList" action="#" method="post">
 				<div class="inputTask">
-					<input
-						id="addList"
-						type="text"
-						placeholder="Add to your to do list..."
-						maxlength="80"
-						required
-						aria-label="New task description" />
-					<button class="submiticon" type="submit" aria-label="Add new task">
-						<i class="fa fa-arrow-turn-down icon"></i>
+					<div class="input-group">
+						<input
+							id="addList"
+							type="text"
+							placeholder="Add to your to do list..."
+							maxlength="80"
+							required
+							aria-label="New task title" />
+						<input id="addDueDate" type="date" aria-label="Due date (optional)" />
+					</div>
+					<textarea
+						id="addDescription"
+						placeholder="Add task description (optional)..."
+						maxlength="200"
+						rows="2"
+						aria-label="Task description (optional)"></textarea>
+
+					<button class="submit-icon" type="submit" aria-label="Add new task">
+						<i class="fa fa-plus icon"></i>
 					</button>
 				</div>
 			</form>

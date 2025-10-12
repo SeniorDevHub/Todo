@@ -15,6 +15,8 @@ import Interactive from "./interactive.js";
 
 const inputList = document.getElementById("inputList");
 const addList = document.getElementById("addList");
+const addDueDate = document.getElementById("addDueDate");
+const addDescription = document.getElementById("addDescription");
 let currentFilter = "all";
 
 // Theme management
@@ -64,10 +66,21 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
 
 inputList.addEventListener("submit", (e) => {
 	e.preventDefault();
-	display.addLists(addList.value);
-	addList.value = "";
-	// Refresh with current filter
-	display.showLists(currentFilter);
+	const title = addList.value.trim();
+	const dueDate = addDueDate.value || null;
+	const description = addDescription.value.trim();
+
+	if (title) {
+		display.addLists(title, dueDate, description);
+
+		// Clear form
+		addList.value = "";
+		addDueDate.value = "";
+		addDescription.value = "";
+
+		// Refresh with current filter
+		display.showLists(currentFilter);
+	}
 });
 
 document.querySelector("#btnClear").addEventListener("click", () => {
